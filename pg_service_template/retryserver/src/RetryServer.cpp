@@ -1,7 +1,5 @@
-#include "ShortLinkServer.hpp"
-
-#include "db/DBHelper.hpp"
-#include "db/DBCleaner.hpp"
+#include "RetryServer.hpp"
+#include "../../src/db/DBHelper.hpp"
 
 #include <fmt/format.h>
 
@@ -13,7 +11,6 @@
 #include <userver/utils/assert.hpp>
 #include <userver/clients/http/component.hpp>
 
-#include "token_gen/TokenGenerator.hpp"
 
 #include <userver/clients/http/client.hpp>
 
@@ -23,22 +20,20 @@ namespace pg_service_template {
 
 namespace {
 
-class ShortLink final : public userver::server::handlers::HttpHandlerBase {
+class RetryService final : public userver::server::handlers::HttpHandlerBase {
  public:
-  static constexpr std::string_view kName = "handler-url-shorten";
+  static constexpr std::string_view kName = "handle-retry-server";
 
-  ShortLink(const userver::components::ComponentConfig& config,
+  RetryService(const userver::components::ComponentConfig& config,
         const userver::components::ComponentContext& component_context)
       : HttpHandlerBase(config, component_context),
         http_client_(component_context.FindComponent<userver::components::HttpClient>().GetHttpClient()),
         m_dbHelper(
             component_context
                 .FindComponent<userver::components::Postgres>("postgres-db-1")
-                .GetCluster()),
-        m_dbCleaner(m_dbHelper)
+                .GetCluster())
   {
     m_dbHelper.prepareDB(true);
-    m_dbCleaner.start();
   }  
 
 
@@ -52,19 +47,7 @@ class ShortLink final : public userver::server::handlers::HttpHandlerBase {
         case userver::server::http::HttpMethod::kGet:
         {
           return GetValue(request);
-        }
-        case userver::server::http::HttpMethod::kDelete:
-        {
-          return DeleteValue(request);
-        }          
-        case userver::server::http::HttpMethod::kPut:
-        {
-          if (request.PathArgCount() == 2 
-             && request.GetPathArg(1) == "shorten") // v1/shorten
-          {
-            return PutValue(request);
-          }         
-        }
+        }       
         default:
             throw userver::server::handlers::ClientError(userver::server::handlers::ExternalBody{
                 fmt::format("Unsupported method {}", request.GetMethod())});
@@ -76,48 +59,16 @@ class ShortLink final : public userver::server::handlers::HttpHandlerBase {
 
   userver::storages::postgres::ClusterPtr pg_cluster_;
 private:
-  std::string PutValue(const userver::server::http::HttpRequest& request) const;
   std::string GetValue(const userver::server::http::HttpRequest& request) const;
-  std::string DeleteValue(const userver::server::http::HttpRequest& request) const;
   userver::clients::http::Client& http_client_;
 
   DBHelper m_dbHelper;
-  DBCleaner m_dbCleaner;
 };
 
 }  // namespace
 
-std::string ShortLink::PutValue(const userver::server::http::HttpRequest& request) const {
-    
-    const auto& longUrl = request.RequestBody();
 
-    try 
-    {
-      auto tokenExist = m_dbHelper.findToken(longUrl);
-      if (tokenExist.has_value()) 
-      {
-        request.SetResponseStatus(userver::server::http::HttpStatus::kFound);
-        return std::string{"url is already exists: http://localhost:8088/" +
-                           tokenExist.value() + "\n"};
-      } 
-      else 
-      {
-        const auto token = TokenGenerator::generateToken();
-        m_dbHelper.saveTokenInfo(token, longUrl);
-        request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
-        return std::string{"generated url : http://localhost:8088/" + token +
-                           "\n"};
-      }
-    } catch (const std::exception& e) 
-    {
-      request.SetResponseStatus(
-          userver::server::http::HttpStatus::InternalServerError);
-      return std::string("Cannot generate a short url because of following error: ")
-       + e.what() + " \n";
-    }
-}
-
-std::string ShortLink::GetValue(const userver::server::http::HttpRequest& request) const {
+std::string RetryService::GetValue(const userver::server::http::HttpRequest& request) const {
     
     const auto paths = request.PathArgCount();
     if (paths != 1)
@@ -163,33 +114,8 @@ std::string ShortLink::GetValue(const userver::server::http::HttpRequest& reques
 }
 
 
-std::string ShortLink::DeleteValue(const userver::server::http::HttpRequest& request) const {
-    
-    if (request.HasPathArg(0))
-    {
-      try {
-        const auto token = request.GetPathArg(0);
-        m_dbHelper.deleteLongUrlInfo(token);
-        request.SetResponseStatus(userver::server::http::HttpStatus::kAccepted);
-        return "";
-      }
-      catch (const std::exception& e)
-      {
-        request.SetResponseStatus(
-          userver::server::http::HttpStatus::InternalServerError);
-        return std::string("cannot perform delete request because of following error: ") + e.what() ;
-      }
-    }
-    return "unknown url for delete reqquest";
-    request.SetResponseStatus(
-          userver::server::http::HttpStatus::BadRequest);
-
-}
-
-
-
-void AppendShortLink(userver::components::ComponentList& component_list) {
-  component_list.Append<ShortLink>();
+void AppendRetryService(userver::components::ComponentList& component_list) {
+  component_list.Append<RetryService>();
   component_list.Append<userver::components::Postgres>("postgres-db-1");
   component_list.Append<userver::clients::dns::Component>();
   component_list.Append<userver::components::HttpClient>();

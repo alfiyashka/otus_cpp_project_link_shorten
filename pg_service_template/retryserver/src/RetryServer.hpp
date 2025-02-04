@@ -7,6 +7,6 @@
 
 namespace pg_service_template {
 
-void AppendShortLink(userver::components::ComponentList& component_list);
+void AppendRetryService(userver::components::ComponentList& component_list);
 
 }  // namespace pg_service_template

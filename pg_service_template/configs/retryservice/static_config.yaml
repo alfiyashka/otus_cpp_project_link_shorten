@@ -12,7 +12,7 @@ components_manager:
     components:                       # Configuring components that were registered via component_list
         server:
             listener:                 # configuring the main listening socket...
-                port: 8088           # ...to listen on this port and...
+                port: 8089           # ...to listen on this port and...
                 task_processor: main-task-processor    # ...process incoming requests on this task processor.
         logging:
             fs-task-processor: fs-task-processor
@@ -50,15 +50,10 @@ components_manager:
             throttling_enabled: false
             url_trailing_slash: strict-match
 
-        handler-url-shorten:                    # Finally! Our handler.
-            path: /*               # Registering handler by URL '/v1/shorten'.
-            method: PUT,GET              # It will only reply to POST requests.
+        handle-retry-server:         # Finally! Our handler.
+            path: /v1/retry            # Registering handler by URL '/v1/retry'.
+            method: GET              # It will only reply to POST requests.
             task_processor: main-task-processor  # Run it on CPU bound task processor
-            
-            path: /configs/values
-            method: POST              # Only for HTTP POST requests. Other handlers may reuse the same URL but use different method.
-            task_processor: main-task-processor
-
 
 
         postgres-db-1:

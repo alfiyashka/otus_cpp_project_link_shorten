@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(pg_service_template CXX)
+project(LinkShorterService CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(DownloadUserver)
@@ -28,6 +28,11 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/token_gen/TokenGenerator.cpp
     src/token_gen/IdGenerator.hpp
     src/token_gen/IdGenerator.cpp
+
+    src/db/DBHelper.hpp
+    src/db/DBHelper.cpp
+    src/db/DBCleaner.hpp
+    src/db/DBCleaner.cpp
 )
 target_link_libraries(${PROJECT_NAME}_objs 
  PUBLIC userver::postgresql)
@@ -36,7 +41,6 @@ target_link_libraries(${PROJECT_NAME}_objs
 # The Service
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_objs )
-
 
 # Unit Tests
 add_executable(${PROJECT_NAME}_unittest
@@ -71,3 +75,18 @@ file(GLOB CONFIGS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/configs/*.yaml ${CMAKE_CURRE
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT ${PROJECT_NAME})
 install(FILES ${CONFIGS_FILES} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME} COMPONENT ${PROJECT_NAME})
+
+
+add_library(retry_server_objs OBJECT
+    retryserver/src/RetryServer.hpp
+    retryserver/src/RetryServer.cpp
+
+    src/db/DBHelper.hpp
+    src/db/DBHelper.cpp
+)
+
+target_link_libraries(retry_server_objs
+ PUBLIC userver::postgresql)
+
+add_executable(RetryService retryserver/main.cpp)
+target_link_libraries(RetryService PRIVATE retry_server_objs )
