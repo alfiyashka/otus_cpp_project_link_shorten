@@ -40,6 +40,8 @@ public:
 
     void deleteLongUrlToRetry(const int64_t id) const;
 
+    int64_t getMaxIdRetry() const;
+
 
 };
 

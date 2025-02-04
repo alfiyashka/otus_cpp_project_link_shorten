@@ -46,7 +46,12 @@ class RetryService final : public userver::server::handlers::HttpHandlerBase {
     switch (request.GetMethod()) {
         case userver::server::http::HttpMethod::kGet:
         {
-          return GetValue(request);
+          if (request.PathArgCount() == 3  //  v1/retry/<id>
+            && request.GetPathArg(0) == "v1"
+            && request.GetPathArg(1) == "retry")
+          {
+            return GetValue(request);
+          }          
         }       
         default:
             throw userver::server::handlers::ClientError(userver::server::handlers::ExternalBody{
@@ -70,46 +75,36 @@ private:
 
 std::string RetryService::GetValue(const userver::server::http::HttpRequest& request) const {
     
-    const auto paths = request.PathArgCount();
-    if (paths != 1)
-    {
-      return request.GetHttpResponse().GetData();
-    }
+  const auto id = std::atoll(request.GetPathArg(2).c_str());
+  if (id > 0)
+  {
+    auto [link, try_attempt] = m_dbHelper.getLongUrlToRetry(id);
+    const auto responce = http_client_.CreateRequest()
+                              .get(link)
+                              .timeout(std::chrono::seconds(1))
+                              .headers(request.GetHeaders())
+                              .retry(try_attempt)
+                              .perform();
 
-    if (request.HasPathArg(0))
+    request.SetResponseStatus(responce->status_code());
+    if (responce.get())
     {
-      const auto token = request.GetPathArg(0);
-      const auto longUrlFind = m_dbHelper.getLongUrl(token);
-      if (!longUrlFind.empty()) {
-        const auto responce = http_client_.CreateRequest()
-          .get(longUrlFind)
-          .timeout(std::chrono::seconds(1))
-          .headers(request.GetHeaders())
-          .perform();
-        request.SetResponseStatus(responce->status_code());
-        if (responce.get())
-        {
-          if (responce->status_code() > 200
-            || responce->status_code() >= 300)
-          {
-            return "unknown result from long url : " + longUrlFind;
-          }
-          return "";
-          
-        }
-        else
-        {
-          return responce->body();
-        }        
+      if (responce->status_code() > 200 || responce->status_code() >= 300)
+      {
+        return std::string("request with url : ") + link + " is failed. Retry attempt: " + std::to_string(try_attempt);
       }
       else
       {
-        request.SetResponseStatus(
-          userver::server::http::HttpStatus::NotFound);
-        return std::string("A short url was expired or unknown\n");
+        return responce->body();
       }
     }
-    return request.GetHttpResponse().GetData();
+    return responce->body();
+  }
+  else
+  {
+    request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
+    return "link id is undefined. Cannot retry httpquery";
+  }
 
 }
 

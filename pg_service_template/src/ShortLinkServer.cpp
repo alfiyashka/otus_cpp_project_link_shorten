@@ -141,10 +141,28 @@ std::string ShortLink::GetValue(const userver::server::http::HttpRequest& reques
           if (responce->status_code() > 200
             || responce->status_code() >= 300)
           {
-            return "unknown result from long url : " + longUrlFind;
+            const auto maxId = m_dbHelper.getMaxIdRetry();
+            m_dbHelper.saveLongUrlToRetry(maxId, longUrlFind, 1);
+
+            const auto responceRetry = http_client_.CreateRequest()
+              .get("http://localhost:8089/v1/retry/" + std::to_string(maxId))
+              .timeout(std::chrono::seconds(1))
+              .headers(request.GetHeaders())
+              .perform();
+
+            if (responceRetry->status_code() > 200
+              || responceRetry->status_code() >= 300)
+            {
+              request.SetResponseStatus(responceRetry->status_code());
+              return "unknown result from long url : " + longUrlFind + ". Retry request result:'" + responceRetry->body() + "' \n";
+            }
+            else
+            {
+              request.SetResponseStatus(responceRetry->status_code());
+              responceRetry->body();
+            }
           }
-          return "";
-          
+          return responce->body();
         }
         else
         {
