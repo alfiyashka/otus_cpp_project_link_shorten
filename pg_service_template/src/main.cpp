@@ -6,12 +6,14 @@
 #include <userver/utils/daemon_run.hpp>
 
 #include "ShortLinkServer.hpp"
+#include "ConfigHandler.hpp"
 
 int main(int argc, char* argv[]) {
   auto component_list = userver::components::MinimalServerComponentList()
                             .Append<userver::server::handlers::Ping>()
                             .Append<userver::components::TestsuiteSupport>()
                             .Append<userver::server::handlers::TestsControl>();
+  
 
   pg_service_template::AppendShortLink(component_list);
 

@@ -22,7 +22,7 @@ public:
         
     }
 
-    void prepareDB(bool needReCreate = false);
+    void prepareDB(const bool needReCreate = false);
 
     void saveTokenInfo(const std::string& token, const std::string& longUrl) const;
 

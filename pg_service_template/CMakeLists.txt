@@ -23,6 +23,8 @@ find_dependency(sqids CONFIG REQUIRED)
 add_library(${PROJECT_NAME}_objs OBJECT
     src/ShortLinkServer.hpp
     src/ShortLinkServer.cpp
+    src/ConfigHandler.hpp
+    src/ConfigHandler.cpp
 
     src/token_gen/TokenGenerator.hpp
     src/token_gen/TokenGenerator.cpp
@@ -33,6 +35,10 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/db/DBHelper.cpp
     src/db/DBCleaner.hpp
     src/db/DBCleaner.cpp
+
+
+    src/exceptions/DBException.hpp
+    src/exceptions/InternalException.hpp
 )
 target_link_libraries(${PROJECT_NAME}_objs 
  PUBLIC userver::postgresql)
@@ -83,6 +89,8 @@ add_library(retry_server_objs OBJECT
 
     src/db/DBHelper.hpp
     src/db/DBHelper.cpp
+    src/exceptions/DBException.hpp
+    src/exceptions/InternalException.hpp
 )
 
 target_link_libraries(retry_server_objs

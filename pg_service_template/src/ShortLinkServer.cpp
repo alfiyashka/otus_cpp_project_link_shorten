@@ -4,6 +4,7 @@
 #include "db/DBCleaner.hpp"
 
 #include <fmt/format.h>
+#include "ConfigHandler.hpp"
 
 #include <userver/clients/dns/component.hpp>
 #include <userver/components/component.hpp>
@@ -25,7 +26,7 @@ namespace {
 
 class ShortLink final : public userver::server::handlers::HttpHandlerBase {
  public:
-  static constexpr std::string_view kName = "handler-url-shorten";
+  static constexpr std::string_view kName = "handler-url-shorten" ; //"handler-url-shorten";
 
   ShortLink(const userver::components::ComponentConfig& config,
         const userver::components::ComponentContext& component_context)
@@ -208,9 +209,11 @@ std::string ShortLink::DeleteValue(const userver::server::http::HttpRequest& req
 
 void AppendShortLink(userver::components::ComponentList& component_list) {
   component_list.Append<ShortLink>();
+  
   component_list.Append<userver::components::Postgres>("postgres-db-1");
   component_list.Append<userver::clients::dns::Component>();
   component_list.Append<userver::components::HttpClient>();
+  component_list.Append<ConfigDistributor>();
 }
 
 }  // namespace pg_service_template
