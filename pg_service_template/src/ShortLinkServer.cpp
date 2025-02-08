@@ -213,7 +213,6 @@ void AppendShortLink(userver::components::ComponentList& component_list) {
   component_list.Append<userver::components::Postgres>("postgres-db-1");
   component_list.Append<userver::clients::dns::Component>();
   component_list.Append<userver::components::HttpClient>();
-  component_list.Append<ConfigDistributor>();
 }
 
 }  // namespace pg_service_template
