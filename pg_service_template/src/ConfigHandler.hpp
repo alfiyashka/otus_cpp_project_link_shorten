@@ -19,7 +19,7 @@ struct ConfigDataWithTimestamp {
  
 class ConfigDistributor final : public server::handlers::HttpHandlerJsonBase {
 public:
-    static constexpr std::string_view kName = "handler-config-parameter";
+    static constexpr std::string_view kName = "handler-config-parameter1";
  
     using KeyValues = std::unordered_map<std::string, formats::json::Value>;
  
