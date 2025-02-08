@@ -209,7 +209,7 @@ std::string ShortLink::DeleteValue(const userver::server::http::HttpRequest& req
 
 void AppendShortLink(userver::components::ComponentList& component_list) {
   component_list.Append<ShortLink>();
-  
+  component_list.Append<ConfigDistributor>();
   component_list.Append<userver::components::Postgres>("postgres-db-1");
   component_list.Append<userver::clients::dns::Component>();
   component_list.Append<userver::components::HttpClient>();
