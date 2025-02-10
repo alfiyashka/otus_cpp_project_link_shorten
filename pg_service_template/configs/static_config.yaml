@@ -51,19 +51,17 @@ components_manager:
             throttling_enabled: false
             url_trailing_slash: strict-match
 
-                            
 
-        handler-config-parameter:                   # Finally! Our handler.
-            path: /configs/values
+        handler-config-parameter1:
+            path: /configs/values/
             method: POST              # Only for HTTP POST requests. Other handlers may reuse the same URL but use different method.
             task_processor: main-task-processor
-            
-        
+
+
         handler-url-shorten: 
             path: /*               # Registering handler by URL '/v1/shorten'.
             method: PUT,GET              # It will only reply to POST requests.
             task_processor: main-task-processor  # Run it on CPU bound task processor
-
  
 
         postgres-db-1:

@@ -12,21 +12,20 @@ class DBCleaner
 private:
 
     userver::utils::PeriodicTask m_cleaner;
-    std::chrono::seconds m_clean_period;
-    std::chrono::seconds m_expired_timestamp;
     DBHelper m_dbHelper;
-    inline static const std::chrono::seconds DEFAULT_CLEAN_PERIOD = std::chrono::seconds(3);//(10);
-    inline static const std::chrono::seconds DEFAULT_EXPIRED_TIMESTAMP = std::chrono::seconds(10 * 24 * 60); // 10 days
+    inline static const std::chrono::seconds DEFAULT_CLEAN_PERIOD = std::chrono::seconds(10);//(10);
     void CleanExpiredData();
+
+    int getCleanPeriod() const;
+
+    void resetSettings();
 
 public:
     DBCleaner(DBHelper& dbHelper);
 
-    DBCleaner(DBHelper& dbHelper
-        , const std::chrono::seconds expired_timestamp
-        , const std::chrono::seconds clean_period);
-
+    
     void start();
+    void stop();
 };
 
 

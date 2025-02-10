@@ -13,8 +13,20 @@ class DBHelper
     static inline const std::string DROP_LISKSTORE = "drop table if exists linkstore;";
     static inline const std::string CREATE_LISKSTORE = "create table if not exists linkstore(token varchar(200) primary key, link text, create_time timestamp);";
 
-    static inline const std::string DROP_LINKRETRY = "drop table if exists linkretry;";
-    static inline const std::string CREATE_LINKRETRY = "create table if not exists linkretry(id bigint primary key, link text, retry_attempt int);";
+    static inline const std::string DROP_LISKSTORELOGGER = "drop table if exists linkstorelogger;";
+    static inline const std::string CREATE_LISKSTORELOGGER =
+        "create table if not exists linkstorelogger"
+        "(request_time timestamp primary key, "
+        "token varchar(200),"
+        "longUrl text, "
+        "request_timeout integer, "
+        "request_attempt integer, "
+        "request_code integer,"
+        "error text);";
+
+    static inline const std::string DROP_SETTINGS = "drop table if exists service_settings;";
+    static inline const std::string CREATE_SETTINGS = "create table if not exists service_settings(name varchar(250) primary key, value varchar(200));";
+
 
 public:
     DBHelper(userver::storages::postgres::ClusterPtr pg_cluster): m_pg_cluster(pg_cluster)
@@ -24,6 +36,8 @@ public:
 
     void prepareDB(const bool needReCreate = false);
 
+    void prepareSettingsTable(const bool needReCreate = false) const;
+
     void saveTokenInfo(const std::string& token, const std::string& longUrl) const;
 
     std::optional<std::string> findToken(const std::string& longUrl) const;
@@ -32,16 +46,19 @@ public:
 
     void deleteLongUrlInfo(const std::string& token) const;
 
-    void cleanExpiredData(const std::chrono::seconds& expired_timestamp);
+    void cleanExpiredData();
 
-    void saveLongUrlToRetry(const int64_t id, const std::string& longUrl, const int retryAattempt) const;
+    std::string getSettingValue(const std::string& setting_name) const;
 
-    std::tuple< std::string, int> getLongUrlToRetry(const int64_t id) const;
+    void saveSettings(const std::string& name, const std::string& value) const;
 
-    void deleteLongUrlToRetry(const int64_t id) const;
-
-    int64_t getMaxIdRetry() const;
-
+    void saveRequestResult(
+        const std::string& token,
+        const std::string& longUrlFind,
+        const int request_timeout_second, 
+        const int request_attempt,
+        const int request_code,
+        const std::string& error) const;
 
 };
 

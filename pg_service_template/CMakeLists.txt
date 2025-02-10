@@ -25,6 +25,9 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/ShortLinkServer.cpp
     src/ConfigHandler.hpp
     src/ConfigHandler.cpp
+    src/ConfigParameters.hpp
+
+
 
     src/token_gen/TokenGenerator.hpp
     src/token_gen/TokenGenerator.cpp
@@ -91,6 +94,8 @@ add_library(retry_server_objs OBJECT
     src/db/DBHelper.cpp
     src/exceptions/DBException.hpp
     src/exceptions/InternalException.hpp
+
+    src/ConfigParameters.hpp
 )
 
 target_link_libraries(retry_server_objs

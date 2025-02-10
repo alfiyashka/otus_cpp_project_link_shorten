@@ -10,16 +10,20 @@
  
 #include <userver/utest/using_namespace_userver.hpp>
 
+#include "db/DBHelper.hpp"
+
 namespace pg_service_template {
 
-struct ConfigDataWithTimestamp {
-    std::chrono::system_clock::time_point updated_at;
-    std::unordered_map<std::string, formats::json::Value> key_values;
-};
  
 class ConfigDistributor final : public server::handlers::HttpHandlerJsonBase {
 public:
-    static constexpr std::string_view kName = "handler-config-parameter";
+    static constexpr std::string_view request_wait_timeout{"request_wait_timeout"};
+    static constexpr std::string_view request_try_attempt{"request_try_attempt" };
+    static constexpr std::string_view clean_db_period{"clean_db_period"};
+    static constexpr std::string_view expired_token_timestamp{"expired_token_timestamp"};
+
+
+    static constexpr std::string_view kName = "handler-config-parameter1";
  
     using KeyValues = std::unordered_map<std::string, formats::json::Value>;
  
@@ -30,21 +34,12 @@ public:
     HandleRequestJsonThrow(const server::http::HttpRequest&, const formats::json::Value& json, server::request::RequestContext&)
         const override;
  
-    void SetNewValues(KeyValues&& key_values) {
-        config_values_.Assign(ConfigDataWithTimestamp{
-            /*.updated_at=*/utils::datetime::Now(),
-            /*.key_values=*/std::move(key_values),
-        });
-    }
  
 private:
-    rcu::Variable<ConfigDataWithTimestamp> config_values_;
+    DBHelper m_dbHelper;
+    
 };
  
  
-formats::json::ValueBuilder
-MakeConfigs(const rcu::ReadablePtr<ConfigDataWithTimestamp>& config_values_ptr, const formats::json::Value& request);
- 
-
  
 }
