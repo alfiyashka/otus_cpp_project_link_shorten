@@ -17,12 +17,6 @@ namespace pg_service_template {
  
 class ConfigDistributor final : public server::handlers::HttpHandlerJsonBase {
 public:
-    static constexpr std::string_view request_wait_timeout{"request_wait_timeout"};
-    static constexpr std::string_view request_try_attempt{"request_try_attempt" };
-    static constexpr std::string_view clean_db_period{"clean_db_period"};
-    static constexpr std::string_view expired_token_timestamp{"expired_token_timestamp"};
-
-
     static constexpr std::string_view kName = "handler-config-parameter1";
  
     using KeyValues = std::unordered_map<std::string, formats::json::Value>;
